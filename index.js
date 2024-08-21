@@ -21,16 +21,23 @@ logger.info(`remote host is: ${process.env.REMOTE_HOST}`)
 logger.info(`escalation char is: ${escalationChar}`)
 
 const app = express()
-app.use('/', statusRoutes(socket))
+app.use('/', statusRoutes.router)
 app.listen(process.env.PORT || 8080)
 
 socket.on('connect', () => {
   logger.info(`connected to ${process.env.REMOTE_HOST}`)
   socket.emit('warmup', { nodeId: me })
+  statusRoutes.setSocketConnectionStatus(true)
 })
+
+socket.on('disconnect', () => {
+  logger.info(`disconnected from ${process.env.REMOTE_HOST}`);
+  statusRoutes.setSocketConnectionStatus(false);
+});
 
 socket.on('error', (error) => {
   logger.error(error)
+  statusRoutes.setSocketConnectionStatus(false)
 })
 
 socket.on('task', (data) => {
