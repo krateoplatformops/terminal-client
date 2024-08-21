@@ -21,7 +21,7 @@ logger.info(`remote host is: ${process.env.REMOTE_HOST}`)
 logger.info(`escalation char is: ${escalationChar}`)
 
 const app = express()
-app.use('/', statusRoutes)
+app.use('/', statusRoutes(socket))
 app.listen(process.env.PORT || 8080)
 
 socket.on('connect', () => {

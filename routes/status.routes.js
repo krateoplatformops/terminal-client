@@ -1,23 +1,20 @@
 const express = require('express')
 const router = express.Router()
 
-const packageJson = require('../package.json')
-
-const response = {
-  name: packageJson.name,
-  version: packageJson.version
-}
-
-router.get('/', (req, res) => {
-  res.status(200).json(response)
-})
-
-router.get('/ping', (req, res) => {
-  res.status(200).json(response)
-})
-
+// Liveness probe
 router.get('/healthz', (req, res) => {
-  res.status(200).json(response)
-})
+  // Check if the application is up and running
+  res.status(200).send('OK');
+});
+
+// Readiness probe
+router.get('/readyz', (req, res) => {
+  // Check if the socket is connected and the app is ready to handle requests
+  if (socket.connected) {
+    res.status(200).send('READY');
+  } else {
+    res.status(500).send('NOT READY');
+  }
+});
 
 module.exports = router
