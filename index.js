@@ -9,6 +9,9 @@ const me = process.env.NODE_ID
 const escalationChar = (process.env.ESCALATION_CHAR || '@')[0]
 const cwd = []
 
+// Define the port
+const port = process.env.PORT || 8080;
+
 const socket = io(process.env.REMOTE_HOST)
 // const socket = io(process.env.REMOTE_HOST, {
 //   auth: {
@@ -22,7 +25,36 @@ logger.info(`escalation char is: ${escalationChar}`)
 
 const app = express()
 app.use('/', statusRoutes.router)
-app.listen(process.env.PORT || 8080)
+
+// Function to list all exposed routes
+function listEndpoints(app) {
+  const routes = [];
+  app._router.stack.forEach((middleware) => {
+    if (middleware.route) {
+      // Routes registered directly on the app
+      const methods = Object.keys(middleware.route.methods).map((method) => method.toUpperCase());
+      routes.push({ path: middleware.route.path, methods });
+    } else if (middleware.name === 'router') {
+      // Routes added with router.use()
+      middleware.handle.stack.forEach((handler) => {
+        const methods = Object.keys(handler.route.methods).map((method) => method.toUpperCase());
+        routes.push({ path: handler.route.path, methods });
+      });
+    }
+  });
+  return routes;
+}
+
+// Start listening on the defined port
+app.listen(port, () => {
+  logger.info(`App is listening on port ${port}`);
+
+  const endpoints = listEndpoints(app);
+  logger.info('Exposed APIs:');
+  endpoints.forEach((endpoint) => {
+    logger.info(`- ${endpoint.methods.join(', ')}: ${endpoint.path}`);
+  });
+});
 
 socket.on('connect', () => {
   logger.info(`connected to ${process.env.REMOTE_HOST}`)
